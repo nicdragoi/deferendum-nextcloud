@@ -10,7 +10,8 @@
   <namespace>Deferendum</namespace>
   <category>integration</category>
   <website>https://deferendum.com/</website>
-  <bugs>https://deferendum.com/</bugs>
+  <bugs>https://github.com/nicdragoi/deferendum-nextcloud/issues</bugs>
+  <repository type="git">https://github.com/nicdragoi/deferendum-nextcloud</repository>
   <dependencies><php min-version="8.3"/><nextcloud min-version="34" max-version="35"/></dependencies>
   <repair-steps><uninstall><step>OCA\Deferendum\Migration\RemoveCredentials</step></uninstall></repair-steps>
   <settings><admin>OCA\Deferendum\Settings\Admin</admin><personal>OCA\Deferendum\Settings\Personal</personal></settings>
