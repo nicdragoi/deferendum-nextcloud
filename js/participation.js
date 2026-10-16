@@ -4,8 +4,8 @@
     const el=id=>document.getElementById('deferendum-'+id);
     if (!el('participation')) return;
     const tr=text=>t('deferendum',text), language=(document.documentElement.lang||'en').split(/[-_]/)[0];
-    const pane=el('participation');
-    let generation=0, pendingEpoch=0, connection=null, context=null, selected=null, pending=null, pendingKnown=false, busy=false, confirming=false;
+    const pane=el('participation'), ux=window.DeferendumUX;
+    let generation=0, pendingEpoch=0, confirmationEpoch=0, connection=null, context=null, selected=null, pending=null, pendingKnown=false, busy=false, confirming=false, cancelConfirmation=null;
     const node=(tag,text)=>{const n=document.createElement(tag); if(text!==undefined)n.textContent=text; return n;};
     const api=async(path,method='GET',body)=>{
         try {
@@ -32,38 +32,46 @@
         }catch(error){operationStatus(error.message==='recovery_binding_mismatch'?reason(error.message):tr('Operation status unavailable. New actions are blocked.'));}finally{busy=false;locks();}
     };
     const resolveOutcome=async()=>{
-        if(!pending||busy)return;const target={...pending},epoch=pendingEpoch;
-        if(!await confirm([tr('Resolve operation outcome'),tr('Operation reference')+': '+target.operationId,tr('Action')+': '+target.command,tr('This checks the receipt or prevents an uncommitted operation from arriving late. It does not repeat the original action.')].join('\n\n'))||busy||epoch!==pendingEpoch)return;
+        if(!pending||busy)return;const target={...pending},epoch=pendingEpoch,previewEpoch=confirmationEpoch;
+        if(!await confirm([tr('Resolve operation outcome'),tr('Operation reference')+': '+target.operationId,tr('Action')+': '+target.command,tr('This checks the receipt or prevents an uncommitted operation from arriving late. It does not repeat the original action.')].join('\n\n'))||busy||epoch!==pendingEpoch||previewEpoch!==confirmationEpoch)return;
         busy=true;locks();try{const result=await api('groups/'+encodeURIComponent(target.groupId)+'/operations/'+encodeURIComponent(target.operationId)+'/reconcile','POST',{});
             if(result.operationId!==target.operationId||!['committed','not_committed'].includes(result.status)||(result.status==='committed'&&result.command!==target.command))throw new Error('outcome_unknown');
             pending=null;pendingEpoch++;pendingKnown=true;operationStatus(tr(result.status==='committed'?'Action recorded by Deferendum.':'The operation was not committed and can no longer arrive late.'));if(selected)await read(selected);
         }catch(error){operationStatus(reason(error.message));}finally{busy=false;locks();}
     };
     const discardExpired=async()=>{
-        if(!pending||pending.canDiscard!==true||busy)return;const target={...pending},epoch=pendingEpoch;
-        if(!await confirm([tr('Discard expired pending operation'),tr('Operation reference')+': '+target.operationId,tr('Outcome no longer recoverable here; original action may have committed. Check Deferendum first. Removing this local block does not undo or retry it.')].join('\n\n'),true)||busy||epoch!==pendingEpoch)return;
+        if(!pending||pending.canDiscard!==true||busy)return;const target={...pending},epoch=pendingEpoch,previewEpoch=confirmationEpoch;
+        if(!await confirm([tr('Discard expired pending operation'),tr('Operation reference')+': '+target.operationId,tr('Outcome no longer recoverable here; original action may have committed. Check Deferendum first. Removing this local block does not undo or retry it.')].join('\n\n'),true)||busy||epoch!==pendingEpoch||previewEpoch!==confirmationEpoch)return;
         busy=true;locks();try{const result=await api('groups/'+encodeURIComponent(target.groupId)+'/operations/'+encodeURIComponent(target.operationId)+'/discard','POST',{});
             if(result.operationId!==target.operationId||result.status!=='discarded_local'||result.originalOutcome!=='unknown')throw new Error('outcome_unknown');
             pending=null;pendingEpoch++;pendingKnown=true;operationStatus(tr('Expired local block removed. The original action outcome remains unknown.'));if(selected)await read(selected);
         }catch(error){operationStatus(reason(error.message));}finally{busy=false;locks();}
     };
-    const clear=()=>{generation++;context=null;selected=null;pane.replaceChildren();pane.hidden=true;const d=el('confirmation');if(d.open)d.close('cancel');};
+    const scrubConfirmation=()=>{const dialog=el('confirmation'),preview=el('confirmation-text');preview.textContent='';preview.scrollTop=0;el('confirmation-impact').textContent='';dialog.scrollTop=0;dialog.returnValue='cancel';dialog.hidden=true;};
+    const cancelPreview=()=>{if(cancelConfirmation)cancelConfirmation();else {const dialog=el('confirmation');if(dialog.open)dialog.close('cancel');scrubConfirmation();}};
+    const clear=()=>{generation++;context=null;selected=null;pane.replaceChildren();pane.hidden=true;el('browser').hidden=el('groups').options.length===0;cancelPreview();};
     const confirm=(preview,localOnly=false)=>new Promise(resolve=>{
-        if(confirming){resolve(false);return;} confirming=true;let accepted=false;const dialog=el('confirmation');dialog.returnValue='cancel';el('confirmation-text').textContent=preview;
+        if(confirming){resolve(false);return;} confirming=true;let settled=false;const dialog=el('confirmation');dialog.returnValue='cancel';el('confirmation-text').textContent=preview;
         const impact=el('confirmation-impact');if(impact)impact.textContent=tr(localOnly?'This removes only the local pending-operation block. It does not change Deferendum.':'This changes the hosted Deferendum record. Votes cannot be changed after submission.');
-        const finish=event=>{accepted=event.target===el('confirmation-accept');dialog.close(accepted?'confirm':'cancel');};
-        const cancel=()=>{accepted=false;};
-        const close=()=>{el('confirmation-cancel').removeEventListener('click',finish);el('confirmation-accept').removeEventListener('click',finish);dialog.removeEventListener('close',close);dialog.removeEventListener('cancel',cancel);confirming=false;resolve(accepted);};
-        el('confirmation-cancel').addEventListener('click',finish);el('confirmation-accept').addEventListener('click',finish);dialog.addEventListener('close',close);dialog.addEventListener('cancel',cancel);dialog.showModal();el('confirmation-cancel').focus();
+        const finish=accepted=>{if(settled)return;settled=true;el('confirmation-cancel').removeEventListener('click',click);el('confirmation-accept').removeEventListener('click',click);dialog.removeEventListener('close',closed);dialog.removeEventListener('cancel',cancel);document.removeEventListener('keydown',escape,true);cancelConfirmation=null;confirming=false;if(dialog.open)dialog.close(accepted?'confirm':'cancel');scrubConfirmation();resolve(accepted);};
+        const click=event=>finish(dialog.open&&event.currentTarget===el('confirmation-accept'));
+        const cancel=event=>{event.preventDefault();finish(false);};
+        const escape=event=>{if(dialog.open&&event.key==='Escape'){event.preventDefault();event.stopPropagation();finish(false);}};
+        const closed=()=>{if(!dialog.open)finish(false);};
+        cancelConfirmation=()=>finish(false);
+        el('confirmation-cancel').addEventListener('click',click);el('confirmation-accept').addEventListener('click',click);dialog.addEventListener('close',closed);dialog.addEventListener('cancel',cancel);document.addEventListener('keydown',escape,true);dialog.hidden=false;
+        try{dialog.showModal();el('confirmation-cancel').focus();}catch{finish(false);}
     });
     const submit=async(command,payload,label)=>{
         if(!writable()||!context?.capabilities.commands.includes(command))return;
-        const view=generation, snapshot=context, location={...selected};
+        const view=generation, previewEpoch=confirmationEpoch, snapshot=context, location={...selected};
         const current=snapshot.versions?.find(v=>v.id===snapshot.question?.currentVersionId),amendment=command==='governance.vote'?snapshot.governance?.amendments.find(a=>a.id===payload.amendmentId):null;
+        const targetsVersion=['framing.support','wording.support','wording.review'].includes(command),target=targetsVersion?snapshot.versions?.find(v=>v.id===payload.versionId):null;
+        if(targetsVersion&&!target){operationStatus(tr('Read the current source before submitting.'));return;}
         if(command==='governance.vote'&&!amendment && !(snapshot.question?.kind==='governance'&&snapshot.question.governanceAmendmentId===payload.amendmentId&&current)){operationStatus(tr('Read the current source before submitting.'));return;}
-        const wordingPreview=amendment?[tr('Current wording')+': '+amendment.wording,tr('Previous value')+': '+amendment.previousLabel,tr('Proposed value')+': '+amendment.proposedLabel,tr('Vote choice')+': '+tr(payload.choice)]:current?[tr('Current wording')+': '+current.wording,tr('Wording version')+': '+current.versionNumber]:[];
+        const wordingPreview=target?[tr('Selected wording')+': '+target.wording,tr('Wording version')+': '+target.versionNumber,tr('Saved status')+': '+tr(target.status)]:amendment?[tr('Current wording')+': '+amendment.wording,tr('Previous value')+': '+amendment.previousLabel,tr('Proposed value')+': '+amendment.proposedLabel,tr('Vote choice')+': '+tr(payload.choice)]:current?[tr('Current wording')+': '+current.wording,tr('Wording version')+': '+current.versionNumber]:[];
         const preview=[tr('Group')+': '+snapshot.group.name,tr('Action')+': '+label,...wordingPreview,JSON.stringify(payload,null,2)].join('\n\n');
-        if(!await confirm(preview)||view!==generation||!writable())return;
+        if(!await confirm(preview)||view!==generation||previewEpoch!==confirmationEpoch||!writable())return;
         const operationId=crypto.randomUUID();const body={operationId,command,payload,...(!command.startsWith('issue.')?{expectedVersion:snapshot.version}:{})};
         pending={operationId,groupId:location.groupId,command};pendingEpoch++;busy=true;operationStatus(tr('Submitting once. Do not repeat this action.'));
         try{const result=await api('groups/'+encodeURIComponent(location.groupId)+'/commands','POST',body);
@@ -74,17 +82,17 @@
             else operationStatus(reason('outcome_unknown'));
         }finally{busy=false;locks();}
     };
-    const section=title=>{const s=node('section');s.className='deferendum-detail';s.append(node('h2',tr(title)));pane.append(s);return s;};
-    const text=(parent,label,value)=>parent.append(node('p',tr(label)+': '+(value===null||value===undefined?tr('Not recorded'):String(value))));
+    const section=title=>{const s=node('section');s.className='deferendum-detail';if(['Governing rules','Question wording'].includes(title)&&['voting','closed'].includes(context.question?.phase)){const d=ux.disclosure(tr(title),s,title==='Governing rules'?'shield':'framing');pane.append(d);}else{s.append(node('h2',tr(title)));pane.append(s);}return s;};
+    const text=(parent,label,value)=>{const row=node('p');row.className='deferendum-data-row';row.append(node('span',tr(label)),node('span',value===null||value===undefined?tr('Not recorded'):String(value)));parent.append(row);};
     const allowed=command=>context.capabilities.commands.includes(command)&&connection?.scopes.includes('deferendum:nextcloud:participate');
-    const button=(parent,command,label,payload)=>{if(!allowed(command))return;const b=node('button',tr(label));b.dataset.command=command;b.addEventListener('click',()=>submit(command,payload,tr(label)));parent.append(b);};
+    const button=(parent,command,label,payload)=>{if(!allowed(command))return;const b=node('button');b.append(ux.icon(command==='argument.react'?'heart':'check'),node('span',tr(label)));b.dataset.command=command;b.addEventListener('click',()=>submit(command,payload,tr(label)));parent.append(b);};
     const field=(form,label,type='textarea',options)=>{
         const wrapper=node('label',tr(label));let input;
         if(type==='select'){input=node('select');for(const option of options){const o=node('option',tr(option.label));o.value=String(option.value);input.append(o);}}
         else {input=node(type==='textarea'?'textarea':'input');if(type!=='textarea')input.type=type;}
         wrapper.append(input);form.append(wrapper);return input;
     };
-    const form=(parent,command,label,build)=>{if(!allowed(command))return;const f=node('form');f.className='deferendum-action-form';const payload=build(f);const b=node('button',tr(label));b.type='submit';b.dataset.command=command;f.append(b);f.addEventListener('submit',event=>{event.preventDefault();try{const value=payload();submit(command,value,tr(label));}catch{operationStatus(tr('Check the entered values.'));}});parent.append(f);};
+    const form=(parent,command,label,build)=>{if(!allowed(command))return;const f=node('form');f.className='deferendum-action-form';const payload=build(f);const b=node('button',tr(label));b.type='submit';b.dataset.command=command;f.append(b);f.addEventListener('submit',event=>{event.preventDefault();try{const value=payload();submit(command,value,tr(label));}catch{operationStatus(tr('Check the entered values.'));}});const d=ux.disclosure(tr(label),f,'plus');d.classList.add('deferendum-form-disclosure');if(command.endsWith('.vote'))d.open=true;parent.append(d);};
     const issues=()=>{
         if(!context.issues)return;const area=section('Concerns');
         form(area,'issue.create','Add concern',f=>{const title=field(f,'Concern title'),direction=field(f,'Suggested direction'),link=field(f,'Supporting link','url');title.required=true;title.minLength=8;title.maxLength=10000;direction.maxLength=10000;return()=>({title:title.value,...(direction.value?{direction:direction.value}:{}),...(link.value?{supportingLink:link.value}:{})});});
@@ -121,14 +129,15 @@
         if(q.phase==='voting'&&v.isEligible&&v.myChoice===null&&current&&(q.kind==='decision'||(q.kind==='governance'&&q.governanceAmendmentId)))form(area,q.kind==='governance'?'governance.vote':'decision.vote','Cast vote',f=>{const options=[{value:'yes',label:'Yes'},{value:'no',label:'No'},...(q.allowAbstention?[{value:'abstain',label:'Abstain'}]:[])],choice=field(f,'Vote choice','select',options),placeholder=node('option',tr('Choose a vote option'));placeholder.value='';placeholder.disabled=true;placeholder.selected=true;choice.prepend(placeholder);choice.required=true;f.append(node('p',tr('Your confirmed vote cannot be changed.')));return()=>({...q.kind==='governance'?{amendmentId:q.governanceAmendmentId}:{decisionId:q.id},choice:choice.value});});
         else area.append(node('p',tr('Voting is unavailable for this account or phase.')));
     };
-    const render=()=>{pane.replaceChildren();pane.hidden=false;pane.append(node('h2',context.group.name));pane.append(node('p',tr('Available controls remain subject to your current Deferendum role, rules and phase.')));if(!context.capabilities.commands.length)pane.append(node('p',tr('This workspace is read-only under the current permissions.')));issues();wordings();discussion();governance();ballot();if(context.nextStep){const area=section('Next step');text(area,'Next step',context.nextStep.nextStep);text(area,'Saved status',tr(context.nextStep.status));text(area,'Responsibility',tr(context.nextStep.responsibility));}locks();};
-    const read=async(location)=>{const current=++generation;context=null;selected=location;pane.replaceChildren(node('p',tr('Reading current source…')));pane.hidden=false;
-        try{const path='groups/'+encodeURIComponent(location.groupId)+(location.decisionId?'/decisions/'+encodeURIComponent(location.decisionId):'')+'/context?language='+encodeURIComponent(language),result=await api(path);if(current!==generation)return;context=result.data;render();text(pane,'Read at',result.fetchedAt);}catch(error){if(current!==generation)return;context=null;pane.replaceChildren(node('p',reason(error.message)));}
+    const render=()=>{pane.replaceChildren();pane.hidden=false;const back=node('button');back.type='button';back.append(ux.icon('arrow-left'),node('span',tr('Back to list')));back.addEventListener('click',()=>{clear();el('groups').focus();});pane.append(back);const hero=node('header');hero.className='deferendum-workspace-heading';const heading=node('h2',context.group.name);heading.tabIndex=-1;if(context.question){hero.append(ux.badge(context.question.phase));const current=context.versions?.find(v=>v.id===context.question.currentVersionId);if(current)heading.textContent=current.wording;if(context.question.phaseEndsAt)hero.append(ux.timer(context.question.phaseEndsAt));hero.append(heading,ux.phaseTrack(context.question.phase));}else hero.append(heading);if(!context.capabilities.commands.length)hero.append(node('p',tr('This workspace is read-only under the current permissions.')));pane.append(hero);if(context.question&&['voting','closed'].includes(context.question.phase)){ballot();discussion();wordings();governance();}else{issues();discussion();wordings();governance();ballot();}if(context.nextStep){const area=section('Next step');text(area,'Next step',context.nextStep.nextStep);text(area,'Saved status',tr(context.nextStep.status));text(area,'Responsibility',tr(context.nextStep.responsibility));}locks();ux.tick();if(!el('main-view').hidden)heading.focus();};
+    const read=async(location)=>{const current=++generation;context=null;selected=location;pane.replaceChildren(node('p',tr('Reading current source…')));pane.hidden=false;el('browser').hidden=true;
+        try{const path='groups/'+encodeURIComponent(location.groupId)+(location.decisionId?'/decisions/'+encodeURIComponent(location.decisionId):'')+'/context?language='+encodeURIComponent(language),result=await api(path);if(current!==generation)return;context=result.data;render();text(pane,'Read at',result.fetchedAt);}catch(error){if(current!==generation)return;context=null;pane.replaceChildren(node('p',reason(error.message)));const back=node('button',tr('Back to list'));back.type='button';back.addEventListener('click',()=>{clear();el('groups').focus();});const retry=node('button',tr('Refresh'));retry.type='button';retry.addEventListener('click',()=>read(location));pane.append(back,retry);}
     };
     el('workspace').addEventListener('click',()=>{const groupId=el('groups').value;if(groupId)read({groupId});});
     document.addEventListener('deferendum:decision',event=>read(event.detail));
     document.addEventListener('deferendum:connection',event=>{connection=event.detail;locks();recoverPending();});
     document.addEventListener('deferendum:clear',clear);
+    document.addEventListener('deferendum:settings',()=>{confirmationEpoch++;cancelPreview();});
     document.addEventListener('visibilitychange',()=>{if(document.hidden)clear();});
     recoverPending();
 })();
