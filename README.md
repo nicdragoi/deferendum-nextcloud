@@ -1,6 +1,20 @@
-# Deferendum — participation candidate 0.2.0
+# Deferendum for Nextcloud — 0.3.0 beta
 
-Unpublished development candidate; not an App Store release or a production-ready integration. The hosted v2 participation adapter and its canonical transaction port are implemented locally but are not deployed. Synthetic PostgreSQL 17 acceptance and browser fixture checks do not establish production readiness. The separate existing 0.1.0 read-only pilot is unchanged.
+A mobile-first workspace for selected Deferendum groups, using matte glass, subtle aurora colors, shared icons and accessible confirmations. Help combines a four-step tour, 20 searchable questions and feedback links. The Dashboard remains read-only.
+
+The hosted participation adapter currently serves only the existing private fictitious-data pilot. This is a beta, not general service availability or completed public acceptance. The interface is available in English, Romanian, French, Spanish and Portuguese. Member-written content is never translated automatically.
+
+## Update without losing the existing connection
+
+The app ID remains `deferendum`. An ordinary update from 0.2.4 preserves local registration, per-user connections, preferences and pending-operation metadata. This release adds no disable/uninstall repair hook or data migration. Do not uninstall or replace the registration as an update step. Retain a verified backup of the installed source, Nextcloud configuration, appconfig and per-user preferences before a live update, and use the standard Nextcloud app update mechanism.
+
+Withdrawing access and replacing an instance registration remain separate explicit user actions. The UI update does not expand an existing grant or silently reconnect a member.
+
+## Interface
+
+Select a group and apply the desired active/history and content filters. Open its workspace or a decision. The current stage and source capabilities determine the controls. Secondary forms expand on request; voting keeps the exact wording and confirmation visible. A countdown reaching zero does not advance a phase locally: refresh the source.
+
+The native Nextcloud app header and account remain under Nextcloud control. Scoped styles support its dark theme, keyboard focus and reduced-motion/transparency preferences. No new frontend framework, external font, tracking or remote asset dependency is introduced.
 
 ## Native workspace
 
@@ -34,9 +48,9 @@ Hosted receipt/fence recovery is limited to the authorization recovery window. A
 
 No Deferendum password or browser bearer is stored. Credentials and pending metadata are encrypted for their local owner. No persistent private-content cache or default telemetry is added. Prior private content is cleared when a read fails or the page is hidden. The Nextcloud administrator remains part of the trust boundary: encryption does not hide secrets from an administrator controlling the server and its keys.
 
-Before public use, review reverse-proxy/application logs and backups independently, resolve OAuth/query/header leakage, and complete canonical database transaction wiring, concurrency/role/phase authorization tests, two-instance runtime and five-language browser acceptance, independent security review, recovery and rollback, consenting volunteer validation, public corresponding source and support/privacy documentation, signing and the exact App Store submission. Local mocks or fixture tests do not establish public readiness.
+Before declaring the hosted service generally available, review reverse-proxy/application logs and backups independently, resolve OAuth/query/header leakage, and complete canonical database transaction wiring, concurrency/role/phase authorization tests, two-instance runtime and five-language browser acceptance, independent security review, recovery and rollback, consenting volunteer validation, public corresponding source and support/privacy documentation, signing and the exact App Store submission. Local mocks or fixture tests do not establish public readiness.
 
-Uninstall removes local credentials; it does not prove that every remote grant was revoked. Users should withdraw connections before uninstalling or revoke them in Deferendum. A compromised Nextcloud server must be revoked at the source.
+Disabling or removing the app does not perform credential erasure or remote revocation. Users should withdraw connections before removal or revoke them in Deferendum, and resolve uncertain operations separately. A compromised Nextcloud server must be revoked at the source. See the lifecycle-retention notes above.
 
 The connector is AGPL-3.0-or-later; see COPYING. All connector PHP, JavaScript, styles, templates, translations and license notices are included as corresponding source; there is no separate compiled frontend or dependency bundle. This does not change the hosted backend or native app licenses. The private hosted backend, test accounts, fixtures, signing keys and operational configuration are not part of this connector distribution. This is not a self-hosted Deferendum service or a Nextcloud endorsement, and it does not replace legal voting or organizational procedures.
 
