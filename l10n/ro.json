@@ -252,13 +252,13 @@
     "What is removed when I withdraw access?": "Ce se elimină când retrag accesul?",
     "The explicit withdrawal control removes the local connection. Check source-side grants in Deferendum if remote revocation could not be confirmed.": "Controlul explicit de retragere elimină conexiunea locală. Verifică autorizările din Deferendum dacă revocarea la sursă nu a putut fi confirmată.",
     "Is the service available to everyone?": "Serviciul este disponibil tuturor?",
-    "This beta uses a hosted service currently limited to the private fictitious-data pilot. Installation does not grant access to other groups or make the service generally available.": "Această versiune beta folosește un serviciu găzduit limitat momentan la pilotul privat cu date fictive. Instalarea nu oferă acces la alte grupuri și nu deschide serviciul publicului.",
     "How do I report a problem?": "Cum raportez o problemă?",
     "Use the contact links below. Include the connector version and generic error, without passwords, tokens or private group content.": "Folosește contactele de mai jos. Include versiunea pluginului și eroarea generală, fără parole, tokenuri sau conținut privat al grupurilor.",
     "Concern": "Problemă",
     "Framing": "Formulare",
     "Debate": "Dezbatere",
-    "Result": "Rezultat"
+    "Result": "Rezultat",
+    "Yes. Connect an existing Deferendum account from a compatible public HTTPS Nextcloud instance. Choose your groups and permissions explicitly. Installation alone never grants access to a group.": "Da. Conectează un cont Deferendum existent de pe o instanță Nextcloud compatibilă, cu HTTPS public. Alege explicit grupurile și permisiunile. Instalarea singură nu oferă acces la un grup."
   },
   "pluralForm": "nplurals=3; plural=(n == 1 ? 0 : ((n == 0 || (n % 100 > 0 && n % 100 < 20)) ? 1 : 2));"
 }

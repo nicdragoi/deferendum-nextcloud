@@ -252,13 +252,13 @@
     "What is removed when I withdraw access?": "¿Qué se elimina al retirar el acceso?",
     "The explicit withdrawal control removes the local connection. Check source-side grants in Deferendum if remote revocation could not be confirmed.": "La retirada explícita elimina la conexión local. Comprueba las autorizaciones en Deferendum si no se pudo confirmar la revocación en origen.",
     "Is the service available to everyone?": "¿El servicio está disponible para todos?",
-    "This beta uses a hosted service currently limited to the private fictitious-data pilot. Installation does not grant access to other groups or make the service generally available.": "Esta beta usa un servicio alojado limitado al piloto privado con datos ficticios. Instalarlo no da acceso a otros grupos ni abre el servicio al público.",
     "How do I report a problem?": "¿Cómo informo de un problema?",
     "Use the contact links below. Include the connector version and generic error, without passwords, tokens or private group content.": "Usa los contactos de abajo. Incluye la versión y el error genérico, sin contraseñas, tokens ni contenido privado de los grupos.",
     "Concern": "Problema",
     "Framing": "Pregunta",
     "Debate": "Debate",
-    "Result": "Resultado"
+    "Result": "Resultado",
+    "Yes. Connect an existing Deferendum account from a compatible public HTTPS Nextcloud instance. Choose your groups and permissions explicitly. Installation alone never grants access to a group.": "Sí. Conecta una cuenta Deferendum existente desde una instancia Nextcloud compatible con HTTPS público. Elige explícitamente tus grupos y permisos. La instalación por sí sola nunca da acceso a un grupo."
   },
   "pluralForm": "nplurals=2; plural=(n != 1);"
 }
