@@ -35,7 +35,7 @@
       ['Connection and privacy','What if an action has an unknown outcome?','Do not repeat it. Check the operation status. Resolve operation outcome checks the receipt or fences an uncommitted request; it never resubmits the original action.'],
       ['Connection and privacy','Does the plugin keep private content?','There is no persistent private-content cache or default telemetry. Previous content is cleared on hidden pages or failed reads. The Nextcloud administrator remains part of the trust boundary.'],
       ['Connection and privacy','What is removed when I withdraw access?','The explicit withdrawal control removes the local connection. Check source-side grants in Deferendum if remote revocation could not be confirmed.'],
-      ['Connection and privacy','Is the service available to everyone?','This beta uses a hosted service currently limited to the private fictitious-data pilot. Installation does not grant access to other groups or make the service generally available.'],
+      ['Connection and privacy','Is the service available to everyone?','Yes. Connect an existing Deferendum account from a compatible public HTTPS Nextcloud instance. Choose your groups and permissions explicitly. Installation alone never grants access to a group.'],
       ['Connection and privacy','How do I report a problem?','Use the contact links below. Include the connector version and generic error, without passwords, tokens or private group content.']
     ];
     const normalize=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase();
