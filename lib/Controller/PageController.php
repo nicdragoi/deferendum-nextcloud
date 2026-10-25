@@ -15,7 +15,7 @@ final class PageController extends Controller {
     #[NoAdminRequired]
     #[NoCSRFRequired]
     public function index(): TemplateResponse {
-        Util::addScript('deferendum', 'main'); Util::addScript('deferendum', 'participation'); Util::addStyle('deferendum', 'main');
+        Util::addScript('deferendum', 'experience'); Util::addScript('deferendum', 'main'); Util::addScript('deferendum', 'participation'); Util::addStyle('deferendum', 'main');
         $response = new TemplateResponse('deferendum', 'main', ['admin' => $this->groups->isAdmin($this->users->getUser()?->getUID() ?? '')]);
         $response->addHeader('Cache-Control', 'no-store'); $response->addHeader('Referrer-Policy', 'no-referrer'); return $response;
     }

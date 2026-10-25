@@ -7,12 +7,12 @@ use OCP\Migration\IRepairStep;
 use OCP\Migration\IOutput;
 final class RemoveCredentials implements IRepairStep {
     public function __construct(private IConfig $config) {}
-    public function getName(): string { return 'Remove local Deferendum connector credentials'; }
+    public function getName(): string { return 'Preserve local Deferendum connector state'; }
     public function run(IOutput $output): void {
-        // Local cleanup only. Administrators should disconnect first so remote
-        // grants are withdrawn; orphaned remote grants still expire within 30 days.
-        $this->config->deleteAppFromAllUsers('deferendum');
-        $this->config->deleteAppValues('deferendum');
-        $output->info('Local Deferendum connector credentials removed.');
+        // Nextcloud also invokes uninstall repair steps on ordinary disable.
+        // Retain this constructor/class for old cached hook references, but
+        // never erase encrypted withdrawal handles or uncertain operations.
+        // Remote withdrawal and pending reconciliation require explicit action.
+        $output->info('Encrypted Deferendum connector state retained. Withdraw access explicitly before permanent removal.');
     }
 }
