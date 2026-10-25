@@ -1,12 +1,12 @@
-# Deferendum for Nextcloud — 0.3.0 beta
+# Deferendum for Nextcloud — 0.3.0
 
 A mobile-first workspace for selected Deferendum groups, using matte glass, subtle aurora colors, shared icons and accessible confirmations. Help combines a four-step tour, 20 searchable questions and feedback links. The Dashboard remains read-only.
 
-The hosted participation adapter currently serves only the existing private fictitious-data pilot. This is a beta, not general service availability or completed public acceptance. The interface is available in English, Romanian, French, Spanish and Portuguese. Member-written content is never translated automatically.
+Connect an existing Deferendum account from any compatible Nextcloud instance with a publicly reachable HTTPS base URL. Each instance proves ownership, then each member selects their own groups and permissions. The interface is available in English, Romanian, French, Spanish and Portuguese. Member-written content is never translated automatically.
 
 ## Update without losing the existing connection
 
-The app ID remains `deferendum`. An ordinary update from 0.2.4 preserves local registration, per-user connections, preferences and pending-operation metadata. This release adds no disable/uninstall repair hook or data migration. Do not uninstall or replace the registration as an update step. Retain a verified backup of the installed source, Nextcloud configuration, appconfig and per-user preferences before a live update, and use the standard Nextcloud app update mechanism.
+The app ID remains `deferendum`. An ordinary update from 0.2.4 or 0.3.0-beta.1 preserves local registration, per-user connections, preferences and pending-operation metadata. This release adds no disable/uninstall repair hook or data migration. Do not uninstall or replace the registration as an update step. Retain a verified backup of the installed source, Nextcloud configuration, appconfig and per-user preferences before a live update, and use the standard Nextcloud app update mechanism.
 
 Withdrawing access and replacing an instance registration remain separate explicit user actions. The UI update does not expand an existing grant or silently reconnect a member.
 
@@ -48,7 +48,7 @@ Hosted receipt/fence recovery is limited to the authorization recovery window. A
 
 No Deferendum password or browser bearer is stored. Credentials and pending metadata are encrypted for their local owner. No persistent private-content cache or default telemetry is added. Prior private content is cleared when a read fails or the page is hidden. The Nextcloud administrator remains part of the trust boundary: encryption does not hide secrets from an administrator controlling the server and its keys.
 
-Before declaring the hosted service generally available, review reverse-proxy/application logs and backups independently, resolve OAuth/query/header leakage, and complete canonical database transaction wiring, concurrency/role/phase authorization tests, two-instance runtime and five-language browser acceptance, independent security review, recovery and rollback, consenting volunteer validation, public corresponding source and support/privacy documentation, signing and the exact App Store submission. Local mocks or fixture tests do not establish public readiness.
+The hosted service and App Store package are deployed separately. Engineering validation covers real OAuth with two instance clients and restricted PostgreSQL principals in disposable fixtures, grant and membership checks, canonical commands, safe uncertain outcomes and the signed connector. The live proxy suppresses access logging for integration routes. These engineering checks do not represent an independent external security audit or a completed volunteer study. The App Store version and hosted availability should be checked when troubleshooting.
 
 Disabling or removing the app does not perform credential erasure or remote revocation. Users should withdraw connections before removal or revoke them in Deferendum, and resolve uncertain operations separately. A compromised Nextcloud server must be revoked at the source. See the lifecycle-retention notes above.
 

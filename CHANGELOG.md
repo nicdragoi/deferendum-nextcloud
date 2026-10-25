@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 — public availability
+
+- Connect existing Deferendum accounts from compatible public HTTPS Nextcloud instances after ownership proof and explicit per-member consent.
+- Clarify setup and availability in Help and all five interface languages.
+- Preserve the app ID, local registration, existing connections, settings and pending operations during an ordinary update.
+- Existing grants retain their selected groups, permissions and expiry.
+
+
 ## 0.3.0-beta.1 — 2026-10-16
 
 - Bring the Deferendum PWA visual language to the Nextcloud workspace: matte glass, subtle aurora colors, consistent icons and responsive navigation.
